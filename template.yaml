@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless Expense Tracker
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: python3.9
+    Environment:
+      Variables:
+        DDB_TABLE: ExpenseTracker
+
+Resources:
+  ExpenseTrackerTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ExpenseTracker
+      AttributeDefinitions:
+        - AttributeName: UserID
+          AttributeType: S
+        - AttributeName: ExpenseID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: UserID
+          KeyType: HASH
+        - AttributeName: ExpenseID
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  AddExpenseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: addExpense
+      Handler: add_expense.lambda_handler
+      CodeUri: src/lambda/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: ExpenseTracker
+      Events:
+        AddExpenseApi:
+          Type: Api
+          Properties:
+            Path: /expenses
+            Method: post
+
+  GetExpensesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: getExpenses
+      Handler: get_expenses.lambda_handler
+      CodeUri: src/lambda/
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: ExpenseTracker
+      Events:
+        GetExpensesApi:
+          Type: Api
+          Properties:
+            Path: /expenses
+            Method: get
+
+  UpdateExpenseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: updateExpense
+      Handler: update_expense.lambda_handler
+      CodeUri: src/lambda/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: ExpenseTracker
+      Events:
+        UpdateExpenseApi:
+          Type: Api
+          Properties:
+            Path: /expenses
+            Method: put
+
+  DeleteExpenseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: deleteExpense
+      Handler: delete_expense.lambda_handler
+      CodeUri: src/lambda/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: ExpenseTracker
+      Events:
+        DeleteExpenseApi:
+          Type: Api
+          Properties:
+            Path: /expenses
+            Method: delete

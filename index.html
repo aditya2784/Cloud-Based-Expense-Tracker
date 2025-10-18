@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Cloud Expense Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f7f7f7; display:flex; align-items:flex-start; justify-content:center; padding:40px; }
+    .card { background:white; padding:20px; border-radius:8px; width:380px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    input, select, textarea { width:100%; padding:8px; margin:6px 0; box-sizing:border-box; }
+    button { width:100%; padding:10px; margin-top:10px; }
+    #list { margin-top:20px; }
+    .item { border-bottom:1px solid #eee; padding:10px 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Expense Tracker</h2>
+    <input id="user" placeholder="UserID (for demo: user123)" value="user123" />
+    <input id="category" placeholder="Category" />
+    <input id="amount" placeholder="Amount" type="number" />
+    <input id="date" type="date" />
+    <input id="desc" placeholder="Description" />
+    <button onclick="addExpense()">Add Expense</button>
+    <button onclick="loadExpenses()" style="margin-top:6px">Load Expenses</button>
+    <div id="list"></div>
+  </div>
+
+<script>
+const API_BASE = "https://REPLACE_WITH_YOUR_API.execute-api.REGION.amazonaws.com/Prod/expenses";
+
+async function addExpense(){
+  const data = {
+    UserID: document.getElementById('user').value,
+    Category: document.getElementById('category').value,
+    Amount: parseFloat(document.getElementById('amount').value || 0),
+    Date: document.getElementById('date').value,
+    Description: document.getElementById('desc').value
+  };
+  const resp = await fetch(API_BASE, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  const j = await resp.json();
+  alert(j.message || JSON.stringify(j));
+  loadExpenses();
+}
+
+async function loadExpenses(){
+  const user = document.getElementById('user').value;
+  const resp = await fetch(API_BASE + '?UserID=' + encodeURIComponent(user));
+  const j = await resp.json();
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  (j.expenses || []).forEach(it => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = '<b>' + it.Category + '</b> - ₹' + it.Amount + '<br/>' + it.Date + '<br/>' + (it.Description || '');
+    list.appendChild(div);
+  });
+}
+</script>
+</body>
+</html>
